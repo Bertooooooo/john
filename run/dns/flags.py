@@ -15,6 +15,7 @@
 
 """DNS Message Flags."""
 
+
 # Standard DNS flags
 
 #: Query Response
@@ -56,9 +57,9 @@ _edns_by_text = {
 # cannot make any mistakes (e.g. omissions, cut-and-paste errors) that
 # would cause the mappings not to be true inverses.
 
-_by_value = dict((y, x) for x, y in _by_text.items())
+_by_value = {y: x for x, y in _by_text.items()}
 
-_edns_by_value = dict((y, x) for x, y in _edns_by_text.items())
+_edns_by_value = {y: x for x, y in _edns_by_text.items()}
 
 
 def _order_flags(table):
@@ -76,15 +77,12 @@ def _from_text(text, table):
     flags = 0
     tokens = text.split()
     for t in tokens:
-        flags = flags | table[t.upper()]
+        flags |= table[t.upper()]
     return flags
 
 
 def _to_text(flags, table, order):
-    text_flags = []
-    for k, v in order:
-        if flags & k != 0:
-            text_flags.append(v)
+    text_flags = [v for k, v in order if flags & k != 0]
     return ' '.join(text_flags)
 
 

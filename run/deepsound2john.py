@@ -54,7 +54,7 @@ def is_magic(buf):
 
 
 def is_wave(buf):
-  return buf[0:4] == b'RIFF' and buf[8:12] == b'WAVE'
+  return buf[:4] == b'RIFF' and buf[8:12] == b'WAVE'
 
 
 def process_deepsound_file(f):

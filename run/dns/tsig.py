@@ -108,21 +108,21 @@ def sign(wire, keyname, secret, time, fudge, original_id, error,
         ctx = hmac.new(secret, digestmod=digestmod)
         ml = len(request_mac)
         if ml > 0:
-            outbuf = outbuf + struct.pack('!H', ml)
+            outbuf += struct.pack('!H', ml)
             ctx.update(struct.pack('!H', ml))
-            outbuf = outbuf + request_mac
+            outbuf += request_mac
             ctx.update(request_mac)
     id = struct.pack('!H', original_id)
-    outbuf = outbuf + id
+    outbuf += id
     ctx.update(id)
-    outbuf = outbuf + wire[2:]
+    outbuf += wire[2:]
     ctx.update(wire[2:])
     if first:
-        outbuf = outbuf + keyname.to_digestable()
+        outbuf += keyname.to_digestable()
         ctx.update(keyname.to_digestable())
-        outbuf = outbuf + struct.pack('!H', dns.rdataclass.ANY)
+        outbuf += struct.pack('!H', dns.rdataclass.ANY)
         ctx.update(struct.pack('!H', dns.rdataclass.ANY))
-        outbuf = outbuf + struct.pack('!I', 0)
+        outbuf += struct.pack('!I', 0)
         ctx.update(struct.pack('!I', 0))
     long_time = time + long(0)
     upper_time = (long_time >> 32) & long(0xffff)
@@ -135,12 +135,12 @@ def sign(wire, keyname, secret, time, fudge, original_id, error,
         raise ValueError('TSIG Other Data is > 65535 bytes')
     post_mac = struct.pack('!HH', error, ol) + other_data
     if first:
-        outbuf = outbuf + pre_mac
+        outbuf += pre_mac
         ctx.update(pre_mac)
-        outbuf = outbuf + post_mac
+        outbuf += post_mac
         ctx.update(post_mac)
     else:
-        outbuf = outbuf + time_mac
+        outbuf += time_mac
         ctx.update(time_mac)
     mac_length = len(omac)
     algo_type = -1
@@ -156,9 +156,8 @@ def sign(wire, keyname, secret, time, fudge, original_id, error,
         algo_type = 5
     elif mac_length == 64:
         algo_type = 6
-    if algo_type != -1:
-        if pout:
-            sys.stdout.write("$rsvp$%d$%s$%s\n" % (algo_type, hexdump(outbuf), hexdump(omac)))
+    if algo_type != -1 and pout:
+        sys.stdout.write("$rsvp$%d$%s$%s\n" % (algo_type, hexdump(outbuf), hexdump(omac)))
     mac = ctx.digest()
     mpack = struct.pack('!H', len(mac))
     tsig_rdata = pre_mac + mpack + mac + id + post_mac
@@ -193,7 +192,7 @@ def validate(wire, keyname, secret, now, request_mac, tsig_start, tsig_rdata,
     if adcount == 0:
         raise dns.exception.FormError
     adcount -= 1
-    new_wire = wire[0:10] + struct.pack("!H", adcount) + wire[12:tsig_start]
+    new_wire = wire[:10] + struct.pack("!H", adcount) + wire[12:tsig_start]
     current = tsig_rdata
     (aname, used) = dns.name.from_wire(wire, current)
     current = current + used
@@ -226,18 +225,12 @@ def validate(wire, keyname, secret, now, request_mac, tsig_start, tsig_rdata,
     """
     time_low = time - fudge
     time_high = time + fudge
-    if now < time_low or now > time_high:
-        pass
-        # raise BadTime XXX
     (junk, our_mac, ctx) = sign(new_wire, keyname, secret, time, fudge,
                                 original_id, error, other_data,
                                 request_mac, ctx, multi, first, aname, omac=mac, pout=pout)
     if our_mac != mac:
         # raise BadSignature
         return None
-    else:
-        # print("MAC is valid for the given password!")
-        pass
     return ctx
 
 

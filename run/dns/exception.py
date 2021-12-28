@@ -52,7 +52,7 @@ class DNSException(Exception):
             self.kwargs = self._check_kwargs(**kwargs)
             self.msg = str(self)
         else:
-            self.kwargs = dict()  # defined but empty for old mode exceptions
+            self.kwargs = {}
         if self.msg is None:
             # doc string is better implicit message than empty string
             self.msg = self.__doc__

@@ -140,7 +140,7 @@ OnDiskHeaderSize = struct.calcsize(OnDiskHeaderFmt)
 def entropy(string):
     prob = [float(string.count(c)) / len(string) for c in dict.fromkeys(list(string))]
 
-    return - sum([p * math.log(p) / math.log(2.0) for p in prob])
+    return -sum(p * math.log(p) / math.log(2.0) for p in prob)
 
 
 def process_file(filename):

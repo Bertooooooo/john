@@ -47,7 +47,7 @@ def process_file(filename):
 
     is_encrypted = False
     key_size = 16
-    for i in range(0, len(elements) - 4):
+    for i in range(len(elements) - 4):
         element = elements[i]
         if element.get("{urn:oasis:names:tc:opendocument:xmlns:manifest:1.0}full-path") == "content.xml":
             for j in range(i + 1, i + 1 + 4):
@@ -133,13 +133,12 @@ def process_file(filename):
         meta_r = meta_tree.getroot()
         for office_meta in meta_r:
             for child in office_meta:
-                if "subject" in child.tag:
-                    gecos += child.text
-                elif "keyword" in child.tag:
-                    gecos += child.text
-                elif "title" in child.tag:
-                    gecos += child.text
-                elif "description" in child.tag:
+                if (
+                    "subject" in child.tag
+                    or "keyword" in child.tag
+                    or "title" in child.tag
+                    or "description" in child.tag
+                ):
                     gecos += child.text
         gecos = gecos.replace("\n","").replace("\r","").replace(":","")
     except:

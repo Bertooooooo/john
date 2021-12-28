@@ -38,8 +38,8 @@ for filename in filenames:
 
     for packet in capture_file:
 
-        if not TCP in packet or (packet.sport != 110 and packet.dport != 110):
-           continue
+        if TCP not in packet or (packet.sport != 110 and packet.dport != 110):
+            continue
 
         pkt = bytes(packet[TCP].payload)
 

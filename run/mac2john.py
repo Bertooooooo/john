@@ -186,7 +186,7 @@ def readPlist(pathOrFile):
 def wrapDataObject(o, for_binary=False):
     if isinstance(o, Data) and not for_binary:
         v = sys.version_info
-        if not (v[0] >= 3 and v[1] >= 4):
+        if v[0] < 3 or v[1] < 4:
             o = plistlib.Data(o)
     elif isinstance(o, (bytes, plistlib.Data)) and for_binary:
         if hasattr(o, 'data'):
@@ -208,10 +208,7 @@ def readPlistFromString(data):
 def is_stream_binary_plist(stream):
     stream.seek(0)
     header = stream.read(7)
-    if header == b'bplist0':
-        return True
-    else:
-        return False
+    return header == b'bplist0'
 
 PlistTrailer = namedtuple('PlistTrailer', 'offsetSize, objectRefSize, offsetCount, topLevelObjectNumber, offsetTableOffset')
 PlistByteCounts = namedtuple('PlistByteCounts', 'nullBytes, boolBytes, intBytes, realBytes, dateBytes, dataBytes, stringBytes, uidBytes, arrayBytes, setBytes, dictBytes')
@@ -393,8 +390,7 @@ class PlistReader(object):
             raise InvalidPlistException("%s extends into trailer" % description)
         elif length < 0:
             raise InvalidPlistException("%s length is less than zero" % length)
-        data = self.contents[self.currentOffset:end]
-        return data
+        return self.contents[self.currentOffset:end]
 
     def readInteger(self, byteSize):
         data = self.readContents(byteSize, "Integer")
@@ -477,10 +473,7 @@ class PlistReader(object):
         try:
             result = datetime.timedelta(seconds=x) + apple_reference_date
         except OverflowError:
-            if x > 0:
-                result = datetime.datetime.max
-            else:
-                result = datetime.datetime.min
+            result = datetime.datetime.max if x > 0 else datetime.datetime.min
         self.currentOffset += 8
         return result
 
@@ -501,7 +494,6 @@ class PlistReader(object):
         result = 0
         if byteSize == 0:
             raise InvalidPlistException("Encountered integer with byte size of 0.")
-        # 1, 2, and 4 byte integers are unsigned
         elif byteSize == 1:
             result = unpack('>B', data)[0]
         elif byteSize == 2:
@@ -509,10 +501,7 @@ class PlistReader(object):
         elif byteSize == 4:
             result = unpack('>L', data)[0]
         elif byteSize == 8:
-            if as_number:
-                result = unpack('>q', data)[0]
-            else:
-                result = unpack('>Q', data)[0]
+            result = unpack('>q', data)[0] if as_number else unpack('>Q', data)[0]
         elif byteSize <= 16:
             # Handle odd-sized or integers larger than 8 bytes
             # Don't naively go over 16 bytes, in order to prevent infinite loops.
@@ -673,9 +662,22 @@ def process_file(filename):
     shell = p1.get('shell', ["bash"])[0]
     name = p1.get('name', ["user"])[0]
 
-    sys.stdout.write("%s:$pbkdf2-hmac-sha512$%d.%s.%s:%s:%s:%s:%s:%s\n" % \
-            (name, iterations, salth, entropyh[0:128], uid, gid, hints,
-             shell, filename))
+    sys.stdout.write(
+        (
+            "%s:$pbkdf2-hmac-sha512$%d.%s.%s:%s:%s:%s:%s:%s\n"
+            % (
+                name,
+                iterations,
+                salth,
+                entropyh[:128],
+                uid,
+                gid,
+                hints,
+                shell,
+                filename,
+            )
+        )
+    )
 
     # from passlib.hash import grub_pbkdf2_sha512
     # hash = grub_pbkdf2_sha512.encrypt("password", rounds=iterations, salt=salt)

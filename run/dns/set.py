@@ -212,10 +212,7 @@ class Set(object):
         for item in self.items:
             if item not in other.items:
                 return False
-        for item in other.items:
-            if item not in self.items:
-                return False
-        return True
+        return all(item in self.items for item in other.items)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -240,10 +237,8 @@ class Set(object):
 
         if not isinstance(other, Set):
             raise ValueError('other must be a Set instance')
-        for item in self.items:
-            if item not in other.items:
-                return False
-        return True
+
+        return all(item in other.items for item in self.items)
 
     def issuperset(self, other):
         """Is this set a superset of *other*?
@@ -253,7 +248,5 @@ class Set(object):
 
         if not isinstance(other, Set):
             raise ValueError('other must be a Set instance')
-        for item in other.items:
-            if item not in self.items:
-                return False
-        return True
+
+        return all(item in self.items for item in other.items)

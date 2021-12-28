@@ -111,9 +111,7 @@ def encode(val, base, minlen=0):
         result_bytes = padding_element*pad_size + result_bytes
 
     result_string = ''.join([chr(y) for y in result_bytes])
-    result = result_bytes if base == 256 else result_string
-
-    return result
+    return result_bytes if base == 256 else result_string
 
 def decode(string, base):
     if base == 256 and isinstance(string, str):
@@ -167,7 +165,7 @@ def b58check_to_bin(inp):
 ### Borrowed code ends ####
 
 def getSeedWordListFromString(seedWords):
-    return [seedWord for seedWord in normalize_string(seedWords).split(' ')]
+    return list(normalize_string(seedWords).split(' '))
 
 # from https://github.com/trezor/python-mnemonic/blob/master/mnemonic/mnemonic.py
 def normalize_string(txt):
@@ -202,20 +200,16 @@ def isValidMnemonic(seedWords):
         return False
 
     for languageFile in languageList:
-         f = open(languageFile, 'r', encoding="utf-8")
-         x = f.readlines()
-         f.close()
-         bip39Words = list(map(lambda s: normalize_string(s.strip()), x))
-         if len(bip39Words) != 2048:
-            sys.stderr.write("[WARNING] Error in " + languageFile + " " + str(len(bip39Words)) + " words detected. There should be exactly 2048 words!\n")
-            return False
+        with open(languageFile, 'r', encoding="utf-8") as f:
+            x = f.readlines()
+        bip39Words = list(map(lambda s: normalize_string(s.strip()), x))
+        if len(bip39Words) != 2048:
+           sys.stderr.write("[WARNING] Error in " + languageFile + " " + str(len(bip39Words)) + " words detected. There should be exactly 2048 words!\n")
+           return False
 
          #Do all the words exist in the selected list? if so validate it.
-         if set(myWords).issubset(bip39Words):
-            if isValidChecksumForMnemonic(seedWords, bip39Words):
-                return True
-            return False
-
+        if set(myWords).issubset(bip39Words):
+            return bool(isValidChecksumForMnemonic(seedWords, bip39Words))
     sys.stderr.write("[WARNING] Provided Seed Words Are Not Valid Seed Words!\n")
     return False
 
@@ -280,10 +274,9 @@ if __name__ == "__main__":
         sys.stderr.write("[WARNING] Very large salt (email address) found, which is unsupported by tezos-opencl format!\n")
 
     if args.ignoreRules == False:
-        if args.ignoreICORules == False:
-           if isICOValidSeed(mnemonic) == False:
-                sys.stderr.write("[ERROR] ICO Rules Broken, Bad Seed Words! Use the -h argument for more options.\n")
-                sys.exit(1)
+        if args.ignoreICORules == False and isICOValidSeed(mnemonic) == False:
+            sys.stderr.write("[ERROR] ICO Rules Broken, Bad Seed Words! Use the -h argument for more options.\n")
+            sys.exit(1)
         if  isValidMnemonic(mnemonic) == False:
             sys.stderr.write("[ERROR] Rules Broken, Bad Seed Words! Use the -h argument for more options.\n")
             sys.exit(1)

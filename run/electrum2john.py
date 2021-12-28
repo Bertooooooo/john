@@ -117,10 +117,9 @@ def process_file(filename, options):
                 iv = binascii.hexlify(iv).decode("ascii")
                 encrypted_data = binascii.hexlify(encrypted_data).decode("ascii")
                 sys.stdout.write("%s:$electrum$1*%s*%s\n" % (bname, iv, encrypted_data))
-                return
             else:
                 sys.stderr.write("%s: Unknown seed_version value '%d' found!\n" % (bname, seed_version))
-                return
+            return
         except:
             sys.stderr.write("%s: Problem in parsing seed value!\n" % (bname, seed_version))
             return
@@ -238,5 +237,5 @@ if __name__ == "__main__":
     parser.add_option('-t', action="store_true", dest="truncate", help="force generation of truncated hashes")
     options, remainder = parser.parse_args()
 
-    for j in range(0, len(remainder)):
+    for j in range(len(remainder)):
         process_file(remainder[j], options)

@@ -218,22 +218,20 @@ def process_file(filename):
         print("%s: cipher alg_id %s not supported, patches welcome!" % (os.path.basename(filename), alg_id))
         return
 
-    if mode_id != kBCMode_CBC and mode_id != kBCMode_XTS:
+    if mode_id not in [kBCMode_CBC, kBCMode_XTS]:
         print("%s: cipher mode_id %s not supported, patches welcome!" % (os.path.basename(filename), hex(mode_id)))
         return
 
     # handle hash_id and salt
-    if hash_id != bchaWhirlpool512 and hash_id != bchaSHA256 and hash_id != pgphaSHA512:
+    if hash_id not in [bchaWhirlpool512, bchaSHA256, pgphaSHA512]:
         print("%s: hash_id %s not supported, patches welcome!" % (os.path.basename(filename), hash_id))
         return 0
     salt_size = -1
-    if hash_id == bchaWhirlpool512:
+    if hash_id == bchaWhirlpool512 or hash_id != bchaSHA256:
         salt_size = 64
-    elif hash_id == bchaSHA256:
+    else:
         salt_size = 32
-    elif hash_id == pgphaSHA512:
-        salt_size = 64
-    salt = hexlify(keys[0:salt_size]).decode("ascii")  # this uses data from keys corresponding to slotnum = 0
+    salt = hexlify(keys[:salt_size]).decode("ascii")
     size, _type, param = struct.unpack(keymap_fmt, keymap[:keymap_size])  # this uses data from keymap with slotnum = 0
     if _type != kBCKeyType_Salt:
         print("%s: internal error while processing salt, please report this problem!" % os.path.basename(filename))
@@ -246,10 +244,10 @@ def process_file(filename):
     slot_size = keymap_size
     version = 1  # internal format version, unused
 
-    for slotnum in range(0, maxSlots):
+    for slotnum in range(maxSlots):
         slot = keymap[slot_size * slotnum:slot_size * (slotnum + 1)]
         size, slot_type, _ = struct.unpack(keymap_fmt, slot)
-        if slot_type == kBCKeyType_Part or slot_type == kBCKeyType_Salt or slot_type == kBCKeyType_Empty:
+        if slot_type in [kBCKeyType_Part, kBCKeyType_Salt, kBCKeyType_Empty]:
             continue
         # find the corresponding bits in "keys", keys[slotnum]
         active_key = keys[kKeySlotSize * slotnum:kKeySlotSize * (slotnum + 1)]

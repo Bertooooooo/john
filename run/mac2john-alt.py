@@ -56,9 +56,22 @@ def process_file(filename):
         entropy = binascii.hexlify(d.get('entropy')).decode("ascii")
         iterations = d.get('iterations')
 
-        sys.stdout.write("%s:$pbkdf2-hmac-sha512$%d.%s.%s:%s:%s:%s:%s:%s\n" % \
-                (name, iterations, salt, entropy[0:128], uid, gid, hints,
-                 shell, filename))
+        sys.stdout.write(
+            (
+                "%s:$pbkdf2-hmac-sha512$%d.%s.%s:%s:%s:%s:%s:%s\n"
+                % (
+                    name,
+                    iterations,
+                    salt,
+                    entropy[:128],
+                    uid,
+                    gid,
+                    hints,
+                    shell,
+                    filename,
+                )
+            )
+        )
 
 
 if __name__ == "__main__":

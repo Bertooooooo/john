@@ -58,8 +58,10 @@ def process_file(filename):
         return
 
     sr_crypto_genkdf_type = struct.unpack("<I", headers[2416:2420])[0]
-    if (sr_crypto_genkdf_type != SR_CRYPTOKDFT_PKCS5_PBKDF2 and
-            sr_crypto_genkdf_type != SR_CRYPTOKDFT_BCRYPT_PBKDF):
+    if sr_crypto_genkdf_type not in [
+        SR_CRYPTOKDFT_PKCS5_PBKDF2,
+        SR_CRYPTOKDFT_BCRYPT_PBKDF,
+    ]:
         sys.stderr.write("%s : kdf of type '%s' is not supported yet!\n" %
                          (os.path.basename(filename), sr_crypto_genkdf_type))
         return

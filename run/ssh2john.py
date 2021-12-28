@@ -135,7 +135,7 @@ def read_private_key(filename):
             raise Exception('Missing AUTH_MAGIC!')
         offset = offset + len(AUTH_MAGIC) + 1  # sizeof(AUTH_MAGIC)
         length = unpack(">I", data[offset:offset+4])[0]  # ciphername length
-        offset = offset + 4
+        offset += 4
         cipher_name = data[offset:offset+length].decode('ascii')
         if cipher_name == 'none':
             sys.stderr.write("%s has no password!\n" % f.name)
@@ -146,7 +146,7 @@ def read_private_key(filename):
             encryption_type = "AES-256-CTR"
         else:
             raise Exception('Unknown encryption type')
-        offset = offset + length
+        offset += length
         length = unpack(">I", data[offset:offset+4])[0]  # kdfname length
         offset = offset + 4 + length
         length = unpack(">I", data[offset:offset+4])[0]  # kdf length
@@ -154,10 +154,10 @@ def read_private_key(filename):
         # print(salt_offset)  # this should be 47, always?
         # find offset to check bytes
         offset = offset + 4 + length  # number of keys
-        offset = offset + 4  # pubkey blob
+        offset += 4
         length = unpack(">I", data[offset:offset+4])[0]  # pubkey length
         offset = offset + 4 + length
-        offset = offset + 4  # skip over length of "encrypted" blob
+        offset += 4
         if offset > len(data):
             raise Exception('Internal error in offset calculation!')
         ciphertext_begin_offset = offset
@@ -173,16 +173,16 @@ def read_private_key(filename):
     salt = binascii.unhexlify(saltstr)
 
     data = binascii.hexlify(data).decode("ascii")
-    if keysize == 24 and encryption_type == "AES-192-CBC" and (ktype == 0 or ktype == 1):  # RSA, DSA keys using AES-192
+    if keysize == 24 and encryption_type == "AES-192-CBC" and ktype in {0, 1}:  # RSA, DSA keys using AES-192
         hashline = "%s:$sshng$%s$%s$%s$%s$%s" % (f.name, 4, len(saltstr) // 2,
             saltstr, len(data) // 2, data)
-    elif keysize == 32 and encryption_type == "AES-256-CBC" and (ktype == 0 or ktype == 1):  # RSA, DSA keys using AES-256
+    elif keysize == 32 and encryption_type == "AES-256-CBC" and ktype in {0, 1}:  # RSA, DSA keys using AES-256
         hashline = "%s:$sshng$%s$%s$%s$%s$%s" % (f.name, 5, len(saltstr) // 2,
             saltstr, len(data) // 2, data)
     elif keysize == 24:
         hashline = "%s:$sshng$%s$%s$%s$%s$%s" % (f.name, 0,  # 0 -> 3DES
             len(salt), saltstr, len(data) // 2, data)
-    elif keysize == 16 and (ktype == 0 or ktype == 1):  # RSA, DSA keys using AES-128
+    elif keysize == 16 and ktype in {0, 1}:  # RSA, DSA keys using AES-128
         hashline = "%s:$sshng$%s$%s$%s$%s$%s" % (f.name, 1, len(saltstr) // 2,
             saltstr, len(data) // 2, data)
     elif keysize == 16 and ktype == 3:  # EC keys using AES-128

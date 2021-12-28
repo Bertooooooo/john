@@ -123,7 +123,7 @@ class PKCS12KDF:
 
         if self._salt is not None:
             limit = int(float(v) * math.ceil((float(s)/float(v))))
-            for i in range(0, limit):
+            for i in range(limit):
                 S += (self._salt[i % s])
         else:
             S += '0'
@@ -138,7 +138,7 @@ class PKCS12KDF:
 
         if password is not None:
             limit = int(float(v) * math.ceil((float(p)/float(v))))
-            for i in range(0, limit):
+            for i in range(limit):
                 P += password[i % p]
         else:
             P += '0'
@@ -162,7 +162,7 @@ class PKCS12KDF:
 
         Ai = bytearray()
 
-        for i in range(0, c):
+        for _ in range(c):
             #
             # Step 6a.Set Ai=Hr(D||I). (i.e. the rth hash of D||I, H(H(H(...H(D||I))))
             #
@@ -173,7 +173,7 @@ class PKCS12KDF:
 
             Ai = hash_function.digest()
 
-            for j in range(1, r):
+            for _ in range(1, r):
                 hash_function = hashlib.sha256()
                 hash_function.update(Ai)
                 Ai = hash_function.digest()
@@ -185,7 +185,7 @@ class PKCS12KDF:
 
             B = b''
 
-            for j in range(0, v):
+            for j in range(v):
                 B += Ai[j % len(Ai)]
 
             #
@@ -195,7 +195,7 @@ class PKCS12KDF:
 
             k = int(math.ceil(float(s)/float(v)) + math.ceil((float(p)/float(v))))
 
-            for j in range(0, k-1):
+            for j in range(k-1):
                 I = ''.join([
                     self.long_to_byte_array(
                         self.byte_array_to_long(I[j:j + v]) + self.byte_array_to_long(bytearray(B)), v

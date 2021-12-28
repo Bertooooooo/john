@@ -34,7 +34,7 @@ OFFSET_MASKED_HEADER = 24
 def applyHeaderMask(buf):
     headerMask = bytearray(unhexlify(HEADER_MASK))
 
-    for idx in range(0, len(headerMask)):
+    for idx in range(len(headerMask)):
         pos = idx + OFFSET_MASKED_HEADER
         buf[pos] = buf[pos] ^ headerMask[idx]
 
