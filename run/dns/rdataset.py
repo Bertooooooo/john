@@ -81,9 +81,7 @@ class Rdataset(dns.set.Set):
         *ttl*, an ``int``.
         """
 
-        if len(self) == 0:
-            self.ttl = ttl
-        elif ttl < self.ttl:
+        if len(self) == 0 or ttl < self.ttl:
             self.ttl = ttl
 
     def add(self, rd, ttl=None):
@@ -113,8 +111,7 @@ class Rdataset(dns.set.Set):
             raise IncompatibleTypes
         if ttl is not None:
             self.update_ttl(ttl)
-        if self.rdtype == dns.rdatatype.RRSIG or \
-           self.rdtype == dns.rdatatype.SIG:
+        if self.rdtype in [dns.rdatatype.RRSIG, dns.rdatatype.SIG]:
             covers = rd.covers()
             if len(self) == 0 and self.covers == dns.rdatatype.NONE:
                 self.covers = covers
@@ -194,10 +191,7 @@ class Rdataset(dns.set.Set):
             ntext = ''
             pad = ''
         s = StringIO()
-        if override_rdclass is not None:
-            rdclass = override_rdclass
-        else:
-            rdclass = self.rdclass
+        rdclass = override_rdclass if override_rdclass is not None else self.rdclass
         if len(self) == 0:
             #
             # Empty rdatasets are used for the question section, and in
@@ -281,11 +275,9 @@ class Rdataset(dns.set.Set):
         """Returns ``True`` if this rdataset matches the specified class,
         type, and covers.
         """
-        if self.rdclass == rdclass and \
+        return self.rdclass == rdclass and \
            self.rdtype == rdtype and \
-           self.covers == covers:
-            return True
-        return False
+           self.covers == covers
 
 
 def from_text_list(rdclass, rdtype, ttl, text_rdatas):

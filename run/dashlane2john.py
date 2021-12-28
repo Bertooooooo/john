@@ -47,7 +47,7 @@ def process(filename, plaintext=None, cipher=0, md=0):
             sys.stderr.write("%s: too short to be valid database?\n" % filename)
             return
 
-        salt = hexlify(data[0:32])
+        salt = hexlify(data[:32])
         if PY3:
             salt = salt.decode("ascii")
         v = 0

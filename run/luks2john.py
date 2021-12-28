@@ -102,7 +102,7 @@ def process_file(filename):
         return -5
 
     # find the best slot
-    for cnt in range(0, LUKS_NUMKEYS):
+    for cnt in range(LUKS_NUMKEYS):
         data = slots[slot_size * cnt:slot_size * (cnt + 1)]
         data = struct.unpack(slot_fmt, data)
         (active, passwordIterations,

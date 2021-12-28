@@ -179,7 +179,7 @@ def opdata1_unpack(data):
 class CloudKeychain(object):  # also handles "OPVault format"
     def __init__(self, path, name='default'):
         self.path = path
-        self.keys = list()
+        self.keys = []
         self.name = name
         self.entries = None
         self.processed = False
@@ -230,7 +230,7 @@ class AgileKeychain(object):
         self.path = path
         self.name = name
         self.entries = None
-        self.keys = list()
+        self.keys = []
         ret = self.__open_keys_file()
         if ret:
             self.john_output()
@@ -275,7 +275,7 @@ class AgileKeychain(object):
 
     def john_output(self):
         sys.stdout.write("%s:$agilekeychain$%s" % (os.path.basename(self.path), len(self.keys)))
-        for i in range(0, len(self.keys)):
+        for i in range(len(self.keys)):
             sys.stdout.write("*%s*%s*%s*%s*%s" % (self.keys[i].iterations,
                 len(self.keys[i].salt),
                 binascii.hexlify(self.keys[i].salt).decode("ascii"),
@@ -316,10 +316,7 @@ def process_sqlite(filename):
 
 
 def process_file(keychain):
-    found = False
-    if "sqlite" in keychain:  # XXX weak hack
-        found = process_sqlite(keychain)
-
+    found = process_sqlite(keychain) if "sqlite" in keychain else False
     if found:
         return
 

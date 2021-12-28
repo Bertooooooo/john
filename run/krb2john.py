@@ -44,7 +44,7 @@ def process_file(f):
 
     xmlData = etree.parse(f)
 
-    messages = [e for e in xmlData.xpath('/pdml/packet/proto[@name="kerberos"]')]
+    messages = list(xmlData.xpath('/pdml/packet/proto[@name="kerberos"]'))
     PA_DATA_ENC_TIMESTAMP = None
     etype = None
     user = ''
@@ -64,16 +64,15 @@ def process_file(f):
         # if salt is empty, realm.user is used instead (in krb5pa-sha1_fmt_plug.c)
         if message_type == "30":  # KRB-ERROR
             r = msg.xpath('.//field[@name="kerberos.etype_info2.salt"]') or msg.xpath('.//field[@name="kerberos.salt"]') or msg.xpath('.//field[@name="kerberos.etype_info.salt"]')
-            if r:
-                if isinstance(r, list):
-                    # some of the entries might have "value" missing!
-                    for item in r:
-                        if "value" in item.attrib:
-                            try:
-                                salt = binascii.unhexlify(item.attrib["value"]).decode('ascii')
-                                break
-                            except:
-                                continue
+            if r and isinstance(r, list):
+                # some of the entries might have "value" missing!
+                for item in r:
+                    if "value" in item.attrib:
+                        try:
+                            salt = binascii.unhexlify(item.attrib["value"]).decode('ascii')
+                            break
+                        except:
+                            continue
 
         if message_type == "10":  # Kerberos AS-REQ
             # locate encrypted timestamp
@@ -111,7 +110,7 @@ def process_file(f):
                 user = salt
 
             # user, realm and salt are unused when etype is 23 ;)
-            checksum = PA_DATA_ENC_TIMESTAMP[0:32]
+            checksum = PA_DATA_ENC_TIMESTAMP[:32]
             enc_timestamp = PA_DATA_ENC_TIMESTAMP[32:]
             if etype == "23":  # user:$krb5pa$etype$user$realm$salt$HexTimestampHexChecksum
                 sys.stdout.write("%s:$krb5pa$%s$%s$%s$%s$%s%s\n" % (user,
@@ -136,9 +135,7 @@ def process_file(f):
             spnps = msg.xpath('.//field[@name="kerberos.SNameString"]')  # is this robust enough?
             spn = "Unknown"
             if isinstance(spnps, list):
-                out = []
-                for spnp in spnps:
-                    out.append(spnp.attrib["show"])
+                out = [spnp.attrib["show"] for spnp in spnps]
                 spn = "/".join(out)
             # locate the hash
             rs = msg.xpath('.//field[@name="kerberos.enc_part_element"]')
@@ -151,9 +148,9 @@ def process_file(f):
                     multiple_entries = True
                 for r in rs:
                     if multiple_entries and idx != 0:  # only generate hash for the first "kerberos.enc_part_element", is this always correct?
-                        idx = idx + 1
+                        idx += 1
                         continue
-                    idx = idx + 1
+                    idx += 1
                     v = r.xpath('.//field[@name="kerberos.etype"]')
                     if isinstance(v, list):
                         v = v[0]
@@ -183,14 +180,12 @@ def process_file(f):
                 continue
             if isinstance(rs, list):
                 idx = 0
-                multiple_entries = False
-                if len(rs) >= 2:  # this is typically 2
-                    multiple_entries = True
+                multiple_entries = len(rs) >= 2
                 for r in rs:
                     if multiple_entries and idx == 0:  # skip over the first entry, is this always correct?
-                        idx = idx + 1
+                        idx += 1
                         continue
-                    idx = idx + 1
+                    idx += 1
                     v = r.xpath('.//field[@name="kerberos.etype"]')
                     if isinstance(v, list):
                         v = v[0]
@@ -210,9 +205,13 @@ def process_file(f):
                         v = v[0]
                     data = v.attrib["value"]
                     if etype != "23":
-                        sys.stdout.write("$krb5asrep$%s$%s$%s$%s\n" % (etype, salt, data[0:-24], data[-24:]))
+                        sys.stdout.write(
+                            "$krb5asrep$%s$%s$%s$%s\n"
+                            % (etype, salt, data[:-24], data[-24:])
+                        )
+
                     else:
-                        sys.stdout.write("$krb5asrep$%s$%s$%s\n" % (etype, data[0:32], data[32:]))
+                        sys.stdout.write("$krb5asrep$%s$%s$%s\n" % (etype, data[:32], data[32:]))
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

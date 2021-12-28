@@ -256,10 +256,7 @@ class _DictSAXHandler(object):
             else:
                 item[key] = [value, data]
         except KeyError:
-            if self._should_force_list(key, data):
-                item[key] = [data]
-            else:
-                item[key] = data
+            item[key] = [data] if self._should_force_list(key, data) else data
         return item
 
     def _should_force_list(self, key, value):

@@ -52,8 +52,8 @@ def parse_item(data, item, x):
     return data[i + len(item) + 4 : i + len(item) + 4 + int.from_bytes(data[i + len(item) : i + len(item) + 4],byteorder='big')]
 
 def parse_users(data):
-    users = list()
-    names = list()
+    users = []
+    names = []
     i = 0
     while i < len(data):
         while data[i:i+len(USERNAME)] != USERNAME and i < len(data):

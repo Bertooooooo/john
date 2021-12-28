@@ -87,7 +87,7 @@ FILE_TYPE_KEY_DATAS = "key_datas"
 def xor_buf(buf1, buf2):
     out = bytearray()
 
-    for i in range(0, 16):
+    for i in range(16):
         n1 = ord(buf1[i:i + 1])
         n2 = ord(buf2[i:i + 1])
 
@@ -106,7 +106,7 @@ def aes_ige_decrypt(data, key, iv):
 
     cipher = AES.new(key, AES.MODE_ECB)
 
-    x = iv[ 0:16]
+    x = iv[:16]
     y = iv[16:32]
 
     for i in range(0, len(data), 16):
@@ -123,7 +123,7 @@ def aes_ige_decrypt(data, key, iv):
     return out
 
 def is_correct_ige_decryption(file_path, key, data):
-    checksum = data[ 0: 16]
+    checksum = data[:16]
     aes_data = data[16:288] # up to the end of the buffer
 
     data_a = checksum    + key[  8: 40]
@@ -137,13 +137,13 @@ def is_correct_ige_decryption(file_path, key, data):
     sha1_d = hashlib.sha1(data_d).digest()
 
     aes_key = sha1_a[0: 8] + sha1_b[8:20] + sha1_c[ 4:16]
-    aes_iv  = sha1_a[8:20] + sha1_b[0: 8] + sha1_c[16:20] + sha1_d[0:8]
+    aes_iv = sha1_a[8:20] + sha1_b[:8] + sha1_c[16:20] + sha1_d[:8]
 
     decrypted = aes_ige_decrypt(aes_data, aes_key, aes_iv)
 
     digest = hashlib.sha1(decrypted).digest()
 
-    digest = digest[0:16] # only first 16 bytes are used
+    digest = digest[:16]
 
     if digest == checksum:
         sys.stderr.write("ATTENTION: no password set for this file/account: '%s' (skipped)\n" % file_path)
@@ -224,7 +224,7 @@ def is_valid_tdfs(file_path):
 
     # check the salt length:
 
-    salt_len = actual_data[0:4]
+    salt_len = actual_data[:4]
     salt_len = struct.unpack(">I", salt_len)[0]
 
     if salt_len != LocalEncryptSaltSize:
@@ -237,17 +237,12 @@ def is_valid_tdfs(file_path):
     key_len = actual_data[offset:offset + 4]
     key_len = struct.unpack(">I", key_len)[0]
 
-    if key_len != LocalEncryptKeySize:
-        return False
-
-    return True
+    return key_len == LocalEncryptKeySize
 
 # only returns TDF file names for files with valid key/salt data
 # (not all the TDFS files within the folder)
 
 def find_tdfs_files(folder):
-    tdfs_files = []
-
     # this function searches for all TDFS files with salt and key data.
     # common file names are:
     # - old map0/map1/maps files:
@@ -266,20 +261,14 @@ def find_tdfs_files(folder):
     # but that can't be restricted to max_depth)
 
     MAX_DEPTH = 5 # do not set this to a too small value, if we want to find
-                  # something like +"tdata" +"D877F783D5D3EF8C" too
-
     search_path = folder + os.path.sep
 
-    for i in range(0, MAX_DEPTH):
+    for _ in range(MAX_DEPTH):
         files += glob.glob(search_path + "map*") + glob.glob(search_path + "key_*")
 
         search_path += "*" + os.path.sep
 
-    for f in files:
-        if is_valid_tdfs(f):
-            tdfs_files.append(f)
-
-    return tdfs_files
+    return [f for f in files if is_valid_tdfs(f)]
 
 def detect_file_type(file_path):
     file_type = None
@@ -294,11 +283,11 @@ def detect_file_type(file_path):
     # checks based on file name:
 
     if len(file_name) >= 4:
-        if ".xml" == file_name[-4:].lower():
+        if file_name[-4:].lower() == ".xml":
             is_xml = True
-        elif "key_" == file_name[:4]:
+        elif file_name[:4] == "key_":
             is_key_datas = True
-        elif "map" == file_name[:3]:
+        elif file_name[:3] == "map":
             is_map0 = True
 
     # check if it is a valid TDFS file (if it is for sure not an .xml file):
@@ -353,15 +342,13 @@ def parse_tdfs(file_path):
 
     f.read(4) # TDF$ magic
     f.read(4) # AppVersion 1003008 for Telegram Desktop 1.3.8
-              # AppVersion 2001014 for Telegram Desktop 2.1.14
     data = f.read()
     f.close()
 
     if len(data) < 16:
         return None
 
-    actual_data = data[:-16]
-    return actual_data
+    return data[:-16]
 
 def process_tdfs(file_path):
     # this function assumes that a valid TDFS file was already detected
@@ -412,7 +399,7 @@ def process_xml(file_path):
             name = item.attrib['name']
             if name == "passcodeHash1":
                 h = item.text
-            if name == "passcodeSalt":
+            elif name == "passcodeSalt":
                 salt = item.text
     if not h:
         sys.stderr.write("ERROR: no hash found in XML file '%s'\n" % file_path)

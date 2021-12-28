@@ -36,11 +36,7 @@ def pack_jtr(hccap, message_pair, hccapxfile, ncorr=0):
     (essid, mac_ap, mac_sta, corr, keyver) = struct.unpack(hccap_fmt, hccap)
 
     # replay count checked
-    if message_pair & 0x80 > 1:
-        ver = b'verified'
-    else:
-        ver = b'not verified'
-
+    ver = b'verified' if message_pair & 0x80 > 1 else b'not verified'
     # detect endian and apply nonce correction
     if ncorr != 0:
         try:

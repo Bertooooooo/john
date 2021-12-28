@@ -36,28 +36,29 @@ def process_file(filename, is_standard):
         if re.match('^\s*\S+\s*:\s*$',line):
             username = line.split(':')[0]
 
-        if "password = " in line and "smd5" in line:
-            h = line.split("=")[1].strip()
-            if len(h) != 37:
-                continue
-            if is_standard:
-                sys.stdout.write("%s:$1$%s\n" % (username, h[6:]))
+        if "password = " in line:
+            if "smd5" in line:
+                h = line.split("=")[1].strip()
+                if len(h) != 37:
+                    continue
+                if is_standard:
+                    sys.stdout.write("%s:$1$%s\n" % (username, h[6:]))
+                else:
+                    sys.stdout.write("%s:%s\n" % (username,
+                        h))
+
+            elif "ssha" in line:
+                h = line.split("=")[1].strip()
+
+                tc, salt, h = h.split('$')
+
+                sys.stdout.write("%s:%s$%s$%s\n" % (username,
+                        tc, salt, h))
+
             else:
-                sys.stdout.write("%s:%s\n" % (username,
-                    h))
-
-        elif "password = " in line and "ssha" in line:
-            h = line.split("=")[1].strip()
-
-            tc, salt, h = h.split('$')
-
-            sys.stdout.write("%s:%s$%s$%s\n" % (username,
-                    tc, salt, h))
-
-        elif "password = " in line:  # DES
-            h = line.split("=")[1].strip()
-            if h != "*":
-                sys.stdout.write("%s:%s\n" % (username, h))
+                h = line.split("=")[1].strip()
+                if h != "*":
+                    sys.stdout.write("%s:%s\n" % (username, h))
 
 
 if __name__ == "__main__":

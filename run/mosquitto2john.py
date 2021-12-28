@@ -20,18 +20,18 @@ def format_hmac(user, hash_data, hashcat):
     else it will return a valid john format hash for the 
     JtR pbkdf2-hmac-sha512 hash format"""
 
-    hcat_fmt_str = "sha512:{}:{}:{}"
     john_fmt_str = "{}:$pbkdf2-hmac-sha512${}.{}.{}"
     junk, morejunk, iterations, salt, digest = hash_data.split("$")
-    
+
     if hashcat:
+        hcat_fmt_str = "sha512:{}:{}:{}"
         #Everything just goes in base64 in this mode - nice & easy
         return hcat_fmt_str.format(iterations, salt, digest)
 
     # John format needs Hex conversions
     hex_digest = hexlify(b64decode(digest)).decode().upper()
     hex_salt = hexlify(b64decode(salt)).decode().upper()
-    
+
     return john_fmt_str.format(user, iterations, hex_salt, hex_digest)
 
 def format_sha512(user, hash_data, hashcat):
@@ -40,17 +40,17 @@ def format_sha512(user, hash_data, hashcat):
     else it will take a hash and return a valid john hash for the
     dynamic_82 John mode - sha512($password.$salt) """
 
-    hcat_fmt_str = "{}:{}"
     john_fmt_str = "{}:$dynamic_82${}$HEX${}"
     junk, morejunk, salt, digest = hash_data.split("$")
 
     # Convert hash and salt to hex - needed for both formats now
     hex_digest = hexlify(b64decode(digest)).decode().upper()
     hex_salt = hexlify(b64decode(salt)).decode().upper()
-    
+
     if hashcat:
+        hcat_fmt_str = "{}:{}"
         return hcat_fmt_str.format(hex_digest, hex_salt)
-    
+
     return john_fmt_str.format(user, hex_digest, hex_salt)
 
 def extract_hash(line, hmac_list, sha512_list, regex, hashcat):
@@ -124,13 +124,12 @@ def process_file(hashfile, hashcat):
             extract_hash(line, hmac_list, sha512_list, regex, hashcat)
 
     # Write to stdout if we have any hashes
-    if len(sha512_list) > 0 or len(hmac_list) > 0:
+    if sha512_list or hmac_list:
         for h in sha512_list:
             stdout.write(h + "\n")
         for h in hmac_list:
             stdout.write(h + "\n")
 
-    # The other case is that we found nothing
     else:
         stderr.write(
                 "No hashes found. Is this a valid mosquitto_passwd file?\n")

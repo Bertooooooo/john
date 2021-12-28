@@ -45,7 +45,7 @@ def process_file(filename):
             elif "{SHA-512}" in line:
                 algo = 4  # SHA-512
             else:
-                sys.stderr.write("[!] Unknown hash format -> %s\n" % line[0:8])
+                sys.stderr.write("[!] Unknown hash format -> %s\n" % line[:8])
                 continue
             line = line[tag_length:]
             data = line.split('-')

@@ -66,7 +66,7 @@ def process_file(filename):
 
     data = f.read()  # Can we make this smarter?
 
-    for i in range(0, len(data) - SDAHEADER_size + 1):  # SDAHEADER structure is at the very end of the file!
+    for i in range(len(data) - SDAHEADER_size + 1):  # SDAHEADER structure is at the very end of the file!
         idata = data[i:SDAHEADER_size + i]
 
         fields = struct.unpack(SDAHEADER_fmt, idata)

@@ -31,7 +31,7 @@ def process_file(filename):
                 continue
 
             # first 5 bytes are the salt
-            salt = rest[0:10]
+            salt = rest[:10]
             h = rest[10:]
             output = "$dynamic_25$%s$HEX$%s" % (h, salt)
 

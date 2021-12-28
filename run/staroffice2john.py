@@ -46,7 +46,7 @@ def process_file(filename):
     target = "content.xml"
     is_encrypted = False
     key_size = 16
-    for i in range(0, len(elements)):
+    for i in range(len(elements)):
         element = elements[i]
         if element.get("{http://openoffice.org/2001/manifest}full-path") == target:
             for j in range(i + 1, i + 1 + 3):
@@ -96,7 +96,7 @@ def process_file(filename):
         pad = b"00000000"
         pad_length = original_length % 8
         if pad_length > 0:
-            content = content + pad[0:pad_length]
+            content = content + pad[:pad_length]
         length = len(content)
 
     sys.stdout.write("%s:$sxc$*%s*%s*%s*%s*%s*%d*%s*%d*%s*%d*%d*%s\n" % \

@@ -42,7 +42,9 @@ if __name__ == '__main__':
                 # hack for version 2.0 and 3.0 wallets
                 try:
                     decoded_data = json.loads(data.decode("utf-8"))
-                    if "version" in decoded_data and (str(decoded_data["version"]) == "2" or str(decoded_data["version"]) == "3"):
+                    if "version" in decoded_data and str(
+                        decoded_data["version"]
+                    ) in ["2", "3"]:
                         payload = base64.b64decode(decoded_data["payload"])
                         iterations = decoded_data["pbkdf2_iterations"]
                         print("%s:$blockchain$v2$%s$%s$%s" % (
@@ -50,16 +52,11 @@ if __name__ == '__main__':
                             binascii.hexlify(payload).decode(("ascii"))))
                 except:
                     traceback.print_exc()
-                    pass
-
             if args.base64:
                 # handle blockchain version 1 wallet format files which contain
                 # only a base64 encoded string
                 try:
-                    if PY3:
-                        ddata = base64.decodebytes(data)
-                    else:
-                        ddata = base64.decodestring(data)
+                    ddata = base64.decodebytes(data) if PY3 else base64.decodestring(data)
                     print("%s:$blockchain$%s$%s" % (
                         os.path.basename(filename), len(ddata),
                         binascii.hexlify(ddata).decode("ascii")))

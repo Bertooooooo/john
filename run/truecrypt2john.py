@@ -87,8 +87,5 @@ if __name__ == "__main__":
     parser.add_option('-b', action="store_true", default=False, dest="boot_mode")
     options, remainder = parser.parse_args()
 
-    keyfiles = []
-    if len(remainder) > 2:
-        keyfiles = remainder[1:]
-
+    keyfiles = remainder[1:] if len(remainder) > 2 else []
     process_file(remainder[0], keyfiles, options)
